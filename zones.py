@@ -1,4 +1,4 @@
-# Bloc 3 : PERSISTANCE
+# Bloc 3 : ARCHITECTURE POO
 from personnages import Monstre, Boss
 
 def creer_zones():
