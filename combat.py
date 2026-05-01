@@ -14,6 +14,8 @@ def tour_de_combat(attaquant, defenseur, log_fn=print):
         attaquant.subir_degats(degats_contre)
         return 0
     else:
+        if not defenseur.est_vivant():
+            return 0
         degats = attaquant.attaquer(defenseur)
         return degats
 def combat(joueur, monstre, log_fn=print):
