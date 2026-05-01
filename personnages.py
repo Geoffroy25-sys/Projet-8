@@ -31,9 +31,11 @@ class Personnage:
         elif valeur > self._pv_max:                                                             
             self._pv = self._pv_max        
         else:
-         self._pv = valeur      
+         self._pv = valeur 
+
     def est_vivant(self) :
         return self._pv > 0
+    
     def tenter_parade(self):
         "Retourne True si le personnage pare l'attaque."
         return random.random() < self._chance_parade
@@ -61,10 +63,11 @@ class Personnage:
         print(f"{self._nom:10} : {self._pv:3}/{self._pv_max} PV [{barre:20}]")    
 
 class Joueur(Personnage):
-    def __init__(self, nom, pv_max, attaque, defense, nb_potion_soin = 3):
+    def __init__(self, nom, pv_max, attaque, defense, nb_potion_soin = 7):
         super().__init__(nom, pv_max, attaque, defense, chance_parade=0.20)
         self._xp = 0
-        self._inventaire = {"Potion_soin": nb_potion_soin}
+        self._level_up = 0
+        self._inventaire = {"potion_soin": nb_potion_soin}
         self._zone_actuelle = 1
         
   # Getters
@@ -72,13 +75,27 @@ class Joueur(Personnage):
     def get_inventaire(self):  return self._inventaire
     def get_potion_soin(self): return self._inventaire.get("potion_soin", 0)
     def get_zone_actuelle(self): return self._zone_actuelle
+    def get_level_up(self): return self._level_up
 
     #Setters
-    def set_zone_actuelle(self, zone): self.zone_actuelle = zone
+    def set_zone_actuelle(self, zone): 
+        self._zone_actuelle = zone
     
     def gagner_xp(self, montant):
         self._xp += montant
         print(f"{self._nom} gagne {montant} XP (Total : {self._xp})")
+        self._verifier_level_up()
+
+    def _verifier_level_up(self):
+        """Arthur monte de level tous les 500 XP"""    
+        level = self._xp // 500
+        if level > self._level_up:
+            self._level_up = level
+            self._pv_max += 10
+            self._pv = self._pv_max
+            self._attaque += 3
+            self._defense += 2
+            print(f"LEVEL UP ! Level {self._level_up} | PV:{self._pv_max} ATK:{self._attaque} DEF:{self._defense}")
 
     def ajouter_item(self, item, quantite = 1):
         "Ajoute un objet à l'inventaire. si déjà présent augmenter la qunatité."
@@ -93,19 +110,20 @@ class Joueur(Personnage):
             if self.get_potion_soin() <= 0:
                 print("Plus de potions de soins dans l'inventaire")
                 return False
-            soin = 40
+            soin = 80
             self._inventaire["potion_soin"] -= 1 
             self.set_pv(self._pv + soin)
-            print(f"{self._nom} boit une potion de soin ( + {soin} PV) | Potions restantes : {self._potion_soin}")
+            print(f"{self._nom} boit une potion de soin ( + {soin} PV) | Potions restantes : {self.get_potion_soin}")
             return True
 
     def afficher_stats(self):
         super().afficher_stats()
         inv_str = ", ".join(f"{obj}(*{qte})" for obj, qte in self._inventaire.items())
-        print(f" XP: {self._xp} | Inv: {inv_str}")
+        print(f"XP: {self._xp} | Level: {self._level_up} | Inv: [{inv_str}]")
+        print(f" XP: {self._xp} | Inv: [{inv_str}]")
 
 class Monstre(Personnage):
-    def __init__(self, nom, pv_max, attaque, defense, xp_recompense=100):
+    def __init__(self, nom, pv_max, attaque, defense, xp_recompense=200):
         super().__init__(nom, pv_max, attaque, defense, chance_parade=0.05)
         self._xp_recompense = xp_recompense 
 
