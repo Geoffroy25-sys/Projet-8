@@ -1,3 +1,4 @@
+# Bloc 5: Qualité
 class JeuErreur(Exception):
     "Classe de base pour les erreurs du jeu"
     pass
