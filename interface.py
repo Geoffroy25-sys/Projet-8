@@ -2,6 +2,7 @@
 import tkinter as tk
 from tkinter import scrolledtext, messagebox
 import copy
+import random
 
 from personnages import Joueur, Monstre, Boss
 from persistance import sauvegarder, sauvegarder_avant_boss, charger
@@ -23,7 +24,7 @@ class jeu_RPG(tk.Tk):
         self.title("RPG-Projet 8")
         self.configure(bg = BG)
         self.resizable(False, False)
-        self.Arthur = Joueur("Arthur", 100, 50, 20, nb_potion_soin=3)
+        self.Arthur = Joueur("Arthur", 100, 50, 20, nb_potion_soin=5)
         self._zones = creer_zones()
         self._idx_zones = 0
         self._idx_monstre = 0
@@ -105,11 +106,12 @@ class jeu_RPG(tk.Tk):
         self._lbl_xp_a.config(text=f"XP : {a.get_xp()}")
         self._lbl_est_a.config(text=f"Potion : {a.get_potion_soin()}")
         inv = a.get_inventaire()
-        self._lbl_inv_a.config(text="Inv : " + (",".join(inv) if inv else "vide") )
+        inv_str = ",".join(f"{obj}(*{qte})" for obj, qte in inv.items())
+        self._lbl_inv_a.config(text="Inv : " + inv_str)
 
         ratio_e = e.get_pv() / e.get_pv_max()
         self._canvas_e.coords( self._barre_e, 0, 0, int(160 * ratio_e), 14)
-        prefix = "" if isinstance(e,Boss) else "Boss"
+        prefix = "Boss" if isinstance(e, Boss) else ""
         self._lbl_nom_e.config(text=prefix + e.get_nom())
         self._lbl_pv_e.config(text=f"pv : {e.get_pv()}/{e.get_pv_max()}")
         
@@ -120,8 +122,12 @@ class jeu_RPG(tk.Tk):
             tour_de_combat(Joueur, Monstre,self._log)
             if not Monstre.est_vivant():
                 xp = Monstre.get_xp_recompense()
+                level_avant = self.Arthur.get_level_up()
                 Joueur.gagner_xp(xp)
                 self._log(f"{Monstre.get_nom()} vaincu + {xp} XP ")
+                if self.Arthur.get_level_up() > level_avant:
+                    self._log(f"LEVEL UP ! Level {self.Arthur.get_level_up()}")
+                    self._log(f"PV: {self.Arthur.get_pv_max()} ATK: {self.Arthur.get_attaque()} DEF: {self.Arthur.get_defense()}")
                 self._actualiser()
                 self._apres_victoire(Monstre)
                 return
@@ -140,6 +146,10 @@ class jeu_RPG(tk.Tk):
             recompense = zones["recompense_boss"]
             self.Arthur.ajouter_item(recompense)
             self._log(f"Objet obtenu : {recompense} ")
+
+            for item in zones.get("loot_boss", []):
+                self.Arthur.ajouter_item(item["nom"], item["quantite"])
+                self._log(f"+ {item['nom']} * {item['quantite']}")
 
             if monstre_vaincu.get_est_boss_final():
                 self._log("\nVictoire finale")
@@ -161,6 +171,13 @@ class jeu_RPG(tk.Tk):
          else:
             self._idx_monstre +=1
             monstres=zones["monstres"]
+
+            if random.random() < 0.3:
+                loot_dispo = zones.get ("loot_chemin", [])
+                if loot_dispo:
+                    item = random.choice(loot_dispo)
+                    self.Arthur.ajouter_item(item["nom"], item["quantite"])
+                    self._log(f"Coffre trouvé + {item['nom']} * {item['quantite']}")
             if self._idx_monstre<len(monstres):
                 self._monstre_actuel=monstres[self._idx_monstre]
                 self._log(f"\n{self._monstre_actuel.get_nom()}apparaît")
@@ -184,7 +201,7 @@ class jeu_RPG(tk.Tk):
         if rep:
             Joueur=charger(Joueur,self._log)
             if Joueur:
-                self.Arthur=Joueur
+                self.Arthur = Joueur
                 self._zones = creer_zones
                 self._idx_zones = Joueur.get_zone_actuelle() - 1
                 self._phase = "boss"
@@ -215,7 +232,7 @@ class jeu_RPG(tk.Tk):
 
     def _recommencer(self):
         if messagebox.askyesno("Recommencer", "Repartir depuis le début ?"):
-            self.Arthur = Joueur("Arthur", 100, 50, 20, nb_potion_soin=3)        
+            self.Arthur = Joueur("Arthur", 100, 50, 20, nb_potion_soin=5)        
             self._zones = creer_zones()
             self._idx_zones = 0
             self._idx_monstre = 0
