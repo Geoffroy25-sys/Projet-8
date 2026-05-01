@@ -12,6 +12,7 @@ def sauvegarder (Joueur, log_fn = print):
         "attaque":      Joueur.get_attaque(),
         "defense":      Joueur.get_defense(),
         "XP":           Joueur.get_xp(),
+        "level_up":     Joueur.get_level_up(),
         "inventaire":   Joueur.get_inventaire(),
         "potion_soin":  Joueur.get_potion_soin(),
         "zone":         Joueur.get_zone_actuelle()
